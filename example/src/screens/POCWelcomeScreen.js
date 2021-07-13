@@ -2,13 +2,13 @@ import * as React from 'react';
 
 import { StyleSheet, View, TextInput, Button, Text } from 'react-native';
 import * as services from '../services/index';
-import HmsManager, { HmsView } from 'react-native-hmssdk';
+import HmsManager, { HmsView, HMSConfig } from 'react-native-hmssdk';
 import { TouchableOpacity } from 'react-native';
 
-const callService = async (userId, roomId, role, setToken) => {
+const callService = async (userID, roomID, role, setToken) => {
   const response = await services.fetchToken({
-    userId,
-    roomId,
+    userID,
+    roomID,
     role,
   });
 
@@ -22,9 +22,9 @@ const callService = async (userId, roomId, role, setToken) => {
 };
 
 const App = () => {
-  const [userId, setUserId] = React.useState('');
+  const [userID, setUserID] = React.useState('');
   const [text, setText] = React.useState('');
-  const [roomId, setRoomId] = React.useState('60c894b331e717b8a9fcfccb');
+  const [roomID, setRoomID] = React.useState('60c894b331e717b8a9fcfccb');
   const [role, setRole] = React.useState('host');
   const [token, setToken] = React.useState('');
   const [isMute, setIsMute] = React.useState(false);
@@ -71,14 +71,15 @@ const App = () => {
   }, []);
 
   React.useEffect(() => {
-    if (userId !== '' && token !== '') {
+    if (userID !== '' && token !== '') {
       instance.addEventListener('ON_JOIN', callBackSuccess);
-      instance.join({ authToken: token, userId, roomId });
+      const config = new HMSConfig({ authToken: token, userID, roomID });
+      instance.join(config);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  if (userId === '') {
+  if (userID === '') {
     return (
       <View style={styles.container}>
         <View style={styles.inputContainer}>
@@ -94,8 +95,8 @@ const App = () => {
             title="Submit"
             onPress={() => {
               if (text !== '') {
-                setUserId(text);
-                callService(text, roomId, role, setToken);
+                setUserID(text);
+                callService(text, roomID, role, setToken);
               }
             }}
           />
@@ -135,6 +136,13 @@ const App = () => {
             }}
           >
             <Text style={styles.buttonText}>{isMute ? 'Un-Mute' : 'Mute'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={async () => {
+              instance.leave();
+            }}
+          >
+            <Text style={styles.leaveButtonText}>leave</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
@@ -200,6 +208,12 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     color: '#efefef',
+  },
+  leaveButtonText: {
+    padding: 10,
+    borderRadius: 10,
+    color: '#efefef',
+    backgroundColor: '#de4578',
   },
   videoView: {
     width: '100%',

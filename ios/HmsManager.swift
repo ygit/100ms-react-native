@@ -66,6 +66,7 @@ class HmsManager: RCTEventEmitter, HMSUpdateListener {
 
     func on(error: HMSError) {
         print("ERROR")
+        print(error.description)
         // TODO: errors to be handled here
     }
 
@@ -100,7 +101,10 @@ class HmsManager: RCTEventEmitter, HMSUpdateListener {
     
     @objc
     func join(_ credentials: NSDictionary) {
+        print(credentials)
+        print("Creds")
         if let jwtToken = credentials.value(forKey: "authToken") as! String?, let user = credentials.value(forKey: "userID") as! String?, let room = credentials.value(forKey: "roomID") as! String? {
+            print("Creds inside")
             config = HMSConfig(userID: user, roomID: room, authToken: jwtToken)
             hms?.join(config: config!, delegate: self)
         }
