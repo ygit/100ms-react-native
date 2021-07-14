@@ -140,6 +140,8 @@ const App = () => {
           <TouchableOpacity
             onPress={async () => {
               instance.leave();
+              setToken('');
+              setTrackId('');
             }}
           >
             <Text style={styles.leaveButtonText}>leave</Text>
