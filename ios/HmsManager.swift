@@ -32,7 +32,7 @@ class HmsManager: RCTEventEmitter, HMSUpdateListener {
             }
         }
         
-        self.sendEvent(withName: ON_JOIN, body: ["event": "ON_JOIN", "trackId": room.peers[0].videoTrack?.trackId, "remoteTracks": remoteTracks])
+        self.sendEvent(withName: ON_JOIN, body: ["event": "ON_JOIN", "trackId": hms?.localPeer?.videoTrack?.trackId, "remoteTracks": remoteTracks])
     }
 
     func on(room: HMSRoom, update: HMSRoomUpdate) {
@@ -57,15 +57,15 @@ class HmsManager: RCTEventEmitter, HMSUpdateListener {
     func on(track: HMSTrack, update: HMSTrackUpdate, for peer: HMSPeer) {
         // Listener for updates in Tracks
         print("TRACK")
-        let remotePeers = hms?.remotePeers
-        var remoteTracks: [String] = []
-        for peer in remotePeers ?? [] {
-            let trackId = peer.videoTrack?.trackId
-            if let track = trackId {
-                remoteTracks.append(track)
-            }
-        }
-        self.sendEvent(withName: ON_JOIN, body: ["event": "ON_JOIN", "trackId": hms?.localPeer?.videoTrack?.trackId, "remoteTracks": remoteTracks])
+//        let remotePeers = hms?.remotePeers
+//        var remoteTracks: [String] = []
+//        for peer in remotePeers ?? [] {
+//            let trackId = peer.videoTrack?.trackId
+//            if let track = trackId {
+//                remoteTracks.append(track)
+//            }
+//        }
+//        self.sendEvent(withName: ON_JOIN, body: ["event": "ON_JOIN", "trackId": hms?.localPeer?.videoTrack?.trackId, "remoteTracks": remoteTracks])
     }
 
     // Update function that sync up current room configurations

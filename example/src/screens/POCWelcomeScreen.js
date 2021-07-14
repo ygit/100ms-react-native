@@ -142,6 +142,7 @@ const App = () => {
               instance.leave();
               setToken('');
               setTrackId('');
+              setUserID('');
             }}
           >
             <Text style={styles.leaveButtonText}>leave</Text>
