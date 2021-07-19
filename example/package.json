@@ -9,6 +9,9 @@
     "start": "react-native start"
   },
   "dependencies": {
+    "@types/react": "^17.0.14",
+    "ios-deploy": "^1.11.4",
+    "metro": "^0.64.0",
     "react": "16.13.1",
     "react-native": "0.64",
     "react-native-gesture-handler": "^1.10.3",
@@ -16,11 +19,13 @@
     "react-native-vector-icons": "^8.1.0",
     "react-navigation": "^4.4.4",
     "react-navigation-hooks": "^1.1.0",
-    "react-navigation-stack": "^2.10.4"
+    "react-navigation-stack": "^2.10.4",
+    "typescript": "^4.3.5",
+    "urix": "^0.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.12.10",
-    "@babel/runtime": "^7.12.5",
+    "@babel/runtime": "^7.14.6",
     "babel-plugin-module-resolver": "^4.0.0",
     "metro-react-native-babel-preset": "^0.64.0"
   }
