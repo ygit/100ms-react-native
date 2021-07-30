@@ -133,17 +133,25 @@ class HmsManager: RCTEventEmitter, HMSUpdateListener, HMSPreviewListener {
     
     @objc
     func setLocalMute(_ isMute: Bool) {
-        hms?.localPeer?.localAudioTrack()?.setMute(isMute)
+        print("here 12345")
+        if let peer = hms?.localPeer, let audioTrack = peer.audioTrack as? HMSLocalAudioTrack {
+            audioTrack.setMute(isMute)
+        }
     }
     
     @objc
     func setLocalVideoMute(_ isMute: Bool) {
-        hms?.localPeer?.localVideoTrack()?.setMute(isMute)
+        print("here 123456")
+        if let peer = hms?.localPeer, let videoTrack = peer.videoTrack as? HMSLocalVideoTrack {
+            videoTrack.setMute(isMute)
+        }
     }
     
     @objc
     func switchCamera() {
-        hms?.localPeer?.localVideoTrack()?.switchCamera()
+        if let peer = hms?.localPeer, let videoTrack = peer.videoTrack as? HMSLocalVideoTrack {
+            videoTrack.switchCamera()
+        }
     }
 
     @objc
