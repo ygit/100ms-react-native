@@ -9,6 +9,7 @@ import {
   HMSPeer,
   HMSRemoteAudioStats,
   HMSRemoteVideoStats,
+  HMSRole,
 } from '@100mslive/react-native-hms';
 import { MeetingState } from '../../types';
 import type { Notification } from '../../types';
@@ -54,6 +55,8 @@ type IntialStateType = {
   chatFilterSheetVisible: boolean;
   handleBackButton: boolean;
   autoEnterPipMode: boolean;
+  editUsernameDisabled: boolean;
+  initialRole: HMSRole | null;
 };
 
 const INITIAL_STATE: IntialStateType = {
@@ -85,6 +88,8 @@ const INITIAL_STATE: IntialStateType = {
   chatFilterSheetVisible: false,
   handleBackButton: false,
   autoEnterPipMode: false,
+  editUsernameDisabled: false,
+  initialRole: null,
 };
 
 const appReducer = (
@@ -291,13 +296,29 @@ const appReducer = (
     case ActionTypes.SET_HANDLE_BACK_BUTTON: {
       return {
         ...state,
-        handleBackButton: action.payload.handleBackButton ?? INITIAL_STATE.handleBackButton,
+        handleBackButton:
+          action.payload.handleBackButton ?? INITIAL_STATE.handleBackButton,
       };
     }
     case ActionTypes.SET_AUTO_ENTER_PIP_MODE: {
       return {
         ...state,
-        autoEnterPipMode: action.payload.autoEnterPipMode ?? INITIAL_STATE.autoEnterPipMode,
+        autoEnterPipMode:
+          action.payload.autoEnterPipMode ?? INITIAL_STATE.autoEnterPipMode,
+      };
+    }
+    case ActionTypes.SET_EDIT_USERNAME_DISABLED: {
+      return {
+        ...state,
+        editUsernameDisabled:
+          action.payload.editUsernameDisabled ??
+          INITIAL_STATE.editUsernameDisabled,
+      };
+    }
+    case ActionTypes.SET_INITIAL_ROLE: {
+      return {
+        ...state,
+        initialRole: action.payload.initialRole ?? INITIAL_STATE.initialRole,
       };
     }
     case HmsStateActionTypes.CLEAR_STATES:

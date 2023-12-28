@@ -20,9 +20,12 @@ import {
   HMSMessageRecipient,
   useHMSHLSPlayerResolution,
   useHmsViewsResolutionsState,
+  setSoftInputMode,
+  getSoftInputMode,
   // useHMSPeerUpdates,
 } from '@100mslive/react-native-hms';
 import type { Chat as ChatConfig } from '@100mslive/types-prebuilt/elements/chat';
+import { SoftInputModes } from '@100mslive/react-native-hms';
 import type {
   HMSPIPConfig,
   HMSRole,
@@ -61,7 +64,7 @@ import type {
   OnLeaveHandler,
   PeerTrackNode,
 } from './utils/types';
-import { createPeerTrackNode } from './utils/functions';
+import { createPeerTrackNode, parseMetadata } from './utils/functions';
 import {
   batch,
   shallowEqual,
@@ -91,6 +94,7 @@ import {
   setActiveChatBottomSheetTab,
   setActiveSpeakers,
   setAutoEnterPipMode,
+  setEditUsernameDisabled,
   setFullScreenPeerTrackNode,
   setHMSLocalPeerState,
   setHMSRoleState,
@@ -148,6 +152,8 @@ import type { GridViewRefAttrs } from './components/GridView';
 import { getRoomLayout } from './modules/HMSManager';
 import { DEFAULT_THEME, DEFAULT_TYPOGRAPHY } from './utils/theme';
 import { NotificationTypes } from './types';
+import { KeyboardState, useSharedValue } from 'react-native-reanimated';
+import { useHMSActions } from './hooks-sdk';
 
 export const useHMSListeners = (
   setPeerTrackNodes: React.Dispatch<React.SetStateAction<PeerTrackNode[]>>
@@ -186,48 +192,6 @@ const useHMSRoomUpdate = (hmsInstance: HMSSDK) => {
         }
       } else if (type === HMSRoomUpdate.HLS_STREAMING_STATE_UPDATED) {
         dispatch(changeStartingHLSStream(false));
-      } else if (type === HMSRoomUpdate.RTMP_STREAMING_STATE_UPDATED) {
-        let streaming = room?.rtmpHMSRtmpStreamingState?.running;
-        const startAtDate = room?.rtmpHMSRtmpStreamingState?.startedAt;
-
-        let startTime: null | string = null;
-
-        if (startAtDate) {
-          let hours = startAtDate.getHours().toString();
-          let minutes = startAtDate.getMinutes()?.toString();
-          startTime = hours + ':' + minutes;
-        }
-
-        Toast.showWithGravity(
-          `RTMP Streaming ${
-            streaming
-              ? `Started ${startTime ? 'At ' + startTime : ''}`
-              : 'Stopped'
-          }`,
-          Toast.LONG,
-          Toast.TOP
-        );
-      } else if (type === HMSRoomUpdate.SERVER_RECORDING_STATE_UPDATED) {
-        let streaming = room?.serverRecordingState?.running;
-        const startAtDate = room?.serverRecordingState?.startedAt;
-
-        let startTime: null | string = null;
-
-        if (startAtDate) {
-          let hours = startAtDate.getHours().toString();
-          let minutes = startAtDate.getMinutes()?.toString();
-          startTime = hours + ':' + minutes;
-        }
-
-        Toast.showWithGravity(
-          `Server Recording ${
-            streaming
-              ? `Started ${startTime ? 'At ' + startTime : ''}`
-              : 'Stopped'
-          }`,
-          Toast.LONG,
-          Toast.TOP
-        );
       }
     };
 
@@ -257,6 +221,7 @@ const useHMSPeersUpdate = (
   // const inMeeting = useSelector(
   //   (state: RootState) => state.app.meetingState === MeetingState.IN_MEETING
   // );
+  const hmsActions = useHMSActions();
 
   useEffect(() => {
     const peerUpdateHandler = ({ peer, type }: PeerUpdate) => {
@@ -310,6 +275,7 @@ const useHMSPeersUpdate = (
         const fullScreenPeerTrackNode = reduxState.app.fullScreenPeerTrackNode;
         const miniviewPeerTrackNode = reduxState.app.miniviewPeerTrackNode;
         const localPeerTrackNode = reduxState.app.localPeerTrackNode;
+        const initialRole = reduxState.app.initialRole;
 
         // Currently Applied Layout config
         const currentLayoutConfig = selectLayoutConfigForRole(
@@ -380,6 +346,26 @@ const useHMSPeersUpdate = (
         // - TODO: update local localPeer state
         // - Pass this updated data to Meeting component -> DisplayView component
         updateLocalPeer();
+
+        if (type === HMSPeerUpdate.ROLE_CHANGED) {
+          const parsedLocalPeerMetadata = parseMetadata(peer.metadata);
+
+          if (parsedLocalPeerMetadata.prevRole !== initialRole) {
+            const newMetadata = {
+              ...parsedLocalPeerMetadata,
+              prevRole: initialRole?.name,
+            };
+
+            hmsActions
+              .changeMetadata(newMetadata)
+              .then((r) => {
+                console.log('Metadata changed successfully', r);
+              })
+              .catch((e) => {
+                console.log('Metadata change failed', e);
+              });
+          }
+        }
         return;
       }
       if (type === HMSPeerUpdate.ROLE_CHANGED) {
@@ -2385,8 +2371,13 @@ export const useSavePropsToStore = (
   const { roomCode, options, onLeave, handleBackButton, autoEnterPipMode } =
     props;
 
+  dispatch(setPrebuiltData({ roomCode, options }));
+
   useEffect(() => {
-    dispatch(setPrebuiltData({ roomCode, options }));
+    const passedUserName = options?.userName;
+    if (passedUserName && passedUserName.length > 0) {
+      dispatch(setEditUsernameDisabled(true));
+    }
   }, [roomCode, options]);
 
   useEffect(() => {
@@ -2430,4 +2421,79 @@ export const useStartRecording = () => {
   return {
     startRecording,
   };
+};
+
+export const useAndroidSoftInputAdjustResize = () => {
+  const currentSoftInputRef = useRef<null | SoftInputModes>(null);
+
+  useEffect(() => {
+    if (Platform.OS !== 'android') {
+      return;
+    }
+    const currentSoftInputMode = getSoftInputMode();
+
+    if (currentSoftInputMode !== SoftInputModes.SOFT_INPUT_ADJUST_RESIZE) {
+      currentSoftInputRef.current = currentSoftInputMode;
+
+      setSoftInputMode(SoftInputModes.SOFT_INPUT_ADJUST_RESIZE);
+
+      return () => {
+        if (currentSoftInputRef.current !== null) {
+          setSoftInputMode(currentSoftInputRef.current);
+        }
+      };
+    }
+  }, []);
+};
+
+export const useKeyboardState = () => {
+  const keyboardState = useSharedValue(KeyboardState.UNKNOWN);
+
+  useEffect(() => {
+    let didShowTimeoutId: null | NodeJS.Timeout = null;
+    let didHideTimeoutId: null | NodeJS.Timeout = null;
+
+    const didShowSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      keyboardState.value = KeyboardState.OPENING;
+      if (didShowTimeoutId !== null) {
+        clearTimeout(didShowTimeoutId);
+      }
+      didShowTimeoutId = setTimeout(() => {
+        keyboardState.value = KeyboardState.OPEN;
+        didShowTimeoutId = null;
+      }, 400);
+    });
+
+    const didHideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      keyboardState.value = KeyboardState.CLOSING;
+      if (didHideTimeoutId !== null) {
+        clearTimeout(didHideTimeoutId);
+      }
+      didHideTimeoutId = setTimeout(() => {
+        keyboardState.value = KeyboardState.CLOSED;
+        didHideTimeoutId = null;
+      }, 400);
+    });
+
+    return () => {
+      if (didShowTimeoutId !== null) {
+        clearTimeout(didShowTimeoutId);
+      }
+      if (didHideTimeoutId !== null) {
+        clearTimeout(didHideTimeoutId);
+      }
+      if ('remove' in didShowSubscription) {
+        didShowSubscription.remove();
+      } else {
+        Keyboard.removeSubscription(didShowSubscription);
+      }
+      if ('remove' in didHideSubscription) {
+        didHideSubscription.remove();
+      } else {
+        Keyboard.removeSubscription(didHideSubscription);
+      }
+    };
+  }, []);
+
+  return { keyboardState };
 };

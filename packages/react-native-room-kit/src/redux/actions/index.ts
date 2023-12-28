@@ -366,7 +366,10 @@ export const addUpdateParticipant = (participant: HMSPeer) => ({
   participant,
 });
 
-export const replaceParticipantsList = (participants: HMSPeer[], roleName: string) => ({
+export const replaceParticipantsList = (
+  participants: HMSPeer[],
+  roleName: string
+) => ({
   type: HmsStateActionTypes.REPLACE_PARTICIPANTS_LIST,
   participants,
   roleName,
@@ -390,4 +393,14 @@ export const setHandleBackButton = (handleBackButton?: boolean) => ({
 export const setAutoEnterPipMode = (autoEnterPipMode?: boolean) => ({
   type: actionTypes.SET_AUTO_ENTER_PIP_MODE,
   payload: { autoEnterPipMode },
+});
+
+export const setEditUsernameDisabled = (editUsernameDisabled: boolean) => ({
+  type: actionTypes.SET_EDIT_USERNAME_DISABLED,
+  payload: { editUsernameDisabled },
+});
+
+export const setInitialRole = (initialRole: HMSRole) => ({
+  type: actionTypes.SET_INITIAL_ROLE,
+  payload: { initialRole },
 });
